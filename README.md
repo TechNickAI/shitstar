@@ -1,6 +1,14 @@
-# Project Name
+# Shitstar 💩
 
-Introduction
+Shitstar, a straightforward yet powerful tool designed to help you sift through the shitcoins to find the stars.
+
+Shitstar addresses this problem by providing a simple, user-friendly web application that enables you to filter and identify potentially high-return coins. By leveraging real-time data and customizable filtering criteria, Shitstar helps you make informed decisions in the crypto market.
+
+## Usage
+
+1. Clone the repo
+2. Run `pip install -r requirements.txt`
+3. Run `streamlit run app.py`
 
 ## Coding Principles
 
