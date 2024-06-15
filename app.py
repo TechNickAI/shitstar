@@ -97,5 +97,25 @@ filtered_df = filtered_df.rename(
     }
 )
 
+# Format the data
+formatted_df = filtered_df.copy()
+
+
+def format_large_number(value):
+    if value >= 1_000_000_000_000:
+        return f"${value / 1_000_000_000_000:.1f}T"
+    elif value >= 1_000_000_000:
+        return f"${value / 1_000_000_000:.1f}B"
+    elif value >= 1_000_000:
+        return f"${value / 1_000_000:.1f}M"
+    elif value >= 1_000:
+        return f"${value / 1_000:.1f}k"
+    else:
+        return f"${value:.0f}"
+
+
+formatted_df["Market Cap"] = formatted_df["Market Cap"].apply(format_large_number)
+formatted_df["Volume"] = formatted_df["Volume"].apply(format_large_number)
+
 # Display the filtered DataFrame
-st.write(filtered_df.iloc[start_index:end_index].to_html(escape=False, index=False), unsafe_allow_html=True)
+st.write(formatted_df.iloc[start_index:end_index].to_html(escape=False, index=False), unsafe_allow_html=True)
