@@ -18,7 +18,7 @@ st.header("Shitstar 💩")
 st.sidebar.header("Filter options")
 market_cap_min = st.sidebar.number_input("Min Market Cap")
 volume_min = st.sidebar.number_input("Min Volume")
-abbr_input = st.sidebar.text_input("Symbol")
+search_input = st.sidebar.text_input("Search by Name or Symbol")
 
 # Settings
 COIN_CACHE_TTL = 60 * 60  # 1 hour
@@ -77,10 +77,12 @@ with st.spinner("Downloading coin candle data..."):
     ohlcv_df = load_coin_data("https://s3.ca-central-1.amazonaws.com/cryptoai.dev/coin_daily_candles.csv")
 
 with st.spinner("Filtering through the coins..."):
-    ohlcv_df = ohlcv_df.groupby("Abbr", as_index=False).apply(calculate_roc).reset_index(drop=True)
+    ohlcv_df = ohlcv_df.groupby("CoinMarketCap ID", as_index=False).apply(calculate_roc).reset_index(drop=True)
 
     # Merge the coins data with aggregated OHLCV data
-    aggregated_df = coins_df.merge(ohlcv_df.groupby("Abbr")["Rate of Change"].mean().reset_index(), on="Abbr")
+    aggregated_df = coins_df.merge(
+        ohlcv_df.groupby("CoinMarketCap ID")["Rate of Change"].mean().reset_index(), on="CoinMarketCap ID"
+    )
 
     # Ensure the 'Inception Date' column is timezone-naive before comparison
     aggregated_df["Inception Date"] = pd.to_datetime(aggregated_df["Inception Date"]).dt.tz_localize(None)
@@ -90,9 +92,12 @@ with st.spinner("Filtering through the coins..."):
         (aggregated_df["MarketCap"] >= market_cap_min) & (aggregated_df["Volume"] >= volume_min)
     ]
 
-    # Filter by abbreviation if provided
-    if abbr_input:
-        filtered_df = filtered_df[filtered_df["Abbr"].str.upper() == abbr_input.upper()]
+    # Filter by name or abbreviation if provided
+    if search_input:
+        filtered_df = filtered_df[
+            filtered_df["Name"].str.contains(search_input, case=False, na=False)
+            | filtered_df["Abbr"].str.contains(search_input, case=False, na=False)
+        ]
 
     # Get user's choice for sorting
     sort_column = st.sidebar.selectbox(
@@ -106,7 +111,6 @@ with st.spinner("Filtering through the coins..."):
 
     # Sort the DataFrame
     filtered_df = filtered_df.sort_values(by=sort_column, ascending=sort_order)
-
 result_count = len(filtered_df)
 if result_count == 0:
     st.write("No matching shitcoins found")
