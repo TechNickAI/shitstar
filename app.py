@@ -18,7 +18,7 @@ st.header("Shitstar 💩")
 st.sidebar.header("Filter options")
 market_cap_min = st.sidebar.number_input("Min Market Cap")
 volume_min = st.sidebar.number_input("Min Volume")
-search_input = st.sidebar.text_input("Search by Name or Symbol")
+abbr_input = st.sidebar.text_input("Symbol")
 
 # Settings
 COIN_CACHE_TTL = 60 * 60  # 1 hour
@@ -90,12 +90,9 @@ with st.spinner("Filtering through the coins..."):
         (aggregated_df["MarketCap"] >= market_cap_min) & (aggregated_df["Volume"] >= volume_min)
     ]
 
-    # Filter by search input if provided, checking both Name and Symbol for partial matches
-    if search_input:
-        filtered_df = filtered_df[
-            filtered_df["Name"].str.contains(search_input, case=False, na=False)
-            | filtered_df["Abbr"].str.contains(search_input, case=False, na=False)
-        ]
+    # Filter by abbreviation if provided
+    if abbr_input:
+        filtered_df = filtered_df[filtered_df["Abbr"].str.upper() == abbr_input.upper()]
 
     # Get user's choice for sorting
     sort_column = st.sidebar.selectbox(
