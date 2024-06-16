@@ -29,7 +29,7 @@ COIN_CACHE_TTL = 60 * 60  # 1 hour
 @st.cache_data(ttl=COIN_CACHE_TTL)
 def load_coin_data(url):
     # Set up the cache directory/file
-    cache_dir = Path(tempfile.gettempdir()) / "shitstar_cache.1"
+    cache_dir = Path(tempfile.gettempdir()) / "shitstar_cache.3"
     cache_dir.mkdir(parents=True, exist_ok=True)
     cached_file_path = cache_dir / f"{url.split('/')[-1]}"
 
@@ -75,6 +75,15 @@ def color_negative_red_positive_green(value):
 
 def format_percentage(value):
     return f"{value * 100:.1f}%"
+
+
+# Add this function to create the CoinMarketCap link
+def create_coinmarketcap_link(row):
+    if not row["CoinMarketCap Slug"]:
+        return f"{row['Name']} ({row['Symbol']})"
+    else:
+        url = f"https://coinmarketcap.com/currencies/{row['CoinMarketCap Slug']}/"
+        return f'<a href="{url}">{row["Name"]} ({row["Symbol"]})</a>'
 
 
 # ------------------------------- Data Loading ------------------------------- #
@@ -151,6 +160,16 @@ with st.spinner("Formatting the results..."):
     formatted_df["% 30d"] = formatted_df["% 30d"].apply(color_negative_red_positive_green)
     formatted_df["% Year"] = formatted_df["% Year"].apply(color_negative_red_positive_green)
     formatted_df["% of ATH"] = formatted_df["% of ATH"].apply(format_percentage)
+
+    # Modify the DataFrame to include the CoinMarketCap link
+    formatted_df["Coin"] = formatted_df.apply(create_coinmarketcap_link, axis=1)
+
+    # Remove the Name, CoinMarketCap ID, and CoinMarketCap Slug columns
+    formatted_df = formatted_df.drop(columns=["Name", "Symbol", "CoinMarketCap ID", "CoinMarketCap Slug"])
+
+    # Reorder columns to place the CoinMarketCap Link at the beginning
+    columns_order = ["Coin"] + [col for col in formatted_df.columns if col != "Coin"]
+    formatted_df = formatted_df[columns_order]
 
     # Display the formatted DataFrame
     # Initialize session state for pagination if not already set
