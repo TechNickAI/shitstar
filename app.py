@@ -18,7 +18,7 @@ st.header("Shitstar 💩")
 st.sidebar.header("Filter options")
 market_cap_min = st.sidebar.number_input("Min Market Cap")
 volume_min = st.sidebar.number_input("Min Volume")
-abbr_input = st.sidebar.text_input("Symbol")
+search_input = st.sidebar.text_input("Search by Name or Symbol")
 
 # Settings
 COIN_CACHE_TTL = 60 * 60  # 1 hour
@@ -90,9 +90,12 @@ with st.spinner("Filtering through the coins..."):
         (aggregated_df["MarketCap"] >= market_cap_min) & (aggregated_df["Volume"] >= volume_min)
     ]
 
-    # Filter by abbreviation if provided
-    if abbr_input:
-        filtered_df = filtered_df[filtered_df["Abbr"].str.upper() == abbr_input.upper()]
+    # Filter by search input if provided, checking both Name and Symbol for partial matches
+    if search_input:
+        filtered_df = filtered_df[
+            filtered_df["Name"].str.contains(search_input, case=False, na=False)
+            | filtered_df["Abbr"].str.contains(search_input, case=False, na=False)
+        ]
 
     # Get user's choice for sorting
     sort_column = st.sidebar.selectbox(
@@ -110,55 +113,56 @@ with st.spinner("Filtering through the coins..."):
 result_count = len(filtered_df)
 if result_count == 0:
     st.write("No matching shitcoins found")
-else:
-    st.write(f"{result_count:,} matching shitcoins found")
+    st.stop()
 
-    with st.spinner("Formatting the results..."):
-        # Rename columns and format data
-        formatted_df = filtered_df.rename(
-            columns={
-                "Abbr": "Symbol",
-                "Percent Change 24h": "% 24h",
-                "Percent Change 7d": "% 7d",
-                "Percent Change 30d": "% 30d",
-                "Percent Change 365d": "% Year",
-                "Percent of ATH": "% of ATH",
-                "Inception Date": "Inception",
-                "MarketCap": "Market Cap",
-            }
-        )
-        formatted_df["Market Cap"] = formatted_df["Market Cap"].apply(format_large_number)
-        formatted_df["Volume"] = formatted_df["Volume"].apply(format_large_number)
+st.write(f"{result_count:,} matching shitcoins found")
 
-        # Display the formatted DataFrame
-        # Initialize session state for pagination if not already set
-        if "page_index" not in st.session_state:
-            st.session_state.page_index = 0
+with st.spinner("Formatting the results..."):
+    # Rename columns and format data
+    formatted_df = filtered_df.rename(
+        columns={
+            "Abbr": "Symbol",
+            "Percent Change 24h": "% 24h",
+            "Percent Change 7d": "% 7d",
+            "Percent Change 30d": "% 30d",
+            "Percent Change 365d": "% Year",
+            "Percent of ATH": "% of ATH",
+            "Inception Date": "Inception",
+            "MarketCap": "Market Cap",
+        }
+    )
+    formatted_df["Market Cap"] = formatted_df["Market Cap"].apply(format_large_number)
+    formatted_df["Volume"] = formatted_df["Volume"].apply(format_large_number)
 
-        # Number of items per page
-        items_per_page = 100
+    # Display the formatted DataFrame
+    # Initialize session state for pagination if not already set
+    if "page_index" not in st.session_state:
+        st.session_state.page_index = 0
 
-        # Calculate total number of pages needed
-        total_pages = (result_count + items_per_page - 1) // items_per_page
+    # Number of items per page
+    items_per_page = 100
 
-        # Display the formatted DataFrame for the current page
-        current_page_df = formatted_df.iloc[
-            st.session_state.page_index * items_per_page : (st.session_state.page_index + 1) * items_per_page
-        ]
-        st.write(current_page_df.to_html(escape=False, index=False), unsafe_allow_html=True)
+    # Calculate total number of pages needed
+    total_pages = (result_count + items_per_page - 1) // items_per_page
 
-        # Navigation buttons for pagination
-        st.divider()
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.session_state.page_index > 0:
-                if st.button("Previous"):
-                    st.session_state.page_index -= 1
+    # Display the formatted DataFrame for the current page
+    current_page_df = formatted_df.iloc[
+        st.session_state.page_index * items_per_page : (st.session_state.page_index + 1) * items_per_page
+    ]
+    st.write(current_page_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 
-        with col2:
-            if st.session_state.page_index < total_pages - 1:
-                if st.button("Next"):
-                    st.session_state.page_index += 1
+    # Navigation buttons for pagination
+    st.divider()
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.session_state.page_index > 0:
+            if st.button("Previous"):
+                st.session_state.page_index -= 1
 
-        # Display current page info
-        st.write(f"Page {st.session_state.page_index + 1} of {total_pages}")
+    with col2:
+        if st.session_state.page_index < total_pages - 1:
+            if st.button("Next"):
+                st.session_state.page_index += 1
+
+    # Display current page info
+    st.write(f"Page {st.session_state.page_index + 1} of {total_pages}")
