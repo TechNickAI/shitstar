@@ -67,6 +67,16 @@ def format_large_number(value):
         return f"${value:.0f}"
 
 
+def color_negative_red_positive_green(value):
+    """Return HTML styled string with color based on the value."""
+    color = "red" if value < 0 else "green"
+    return f'<span style="color: {color};">{value:.2f}%</span>'
+
+
+def format_percentage(value):
+    return f"{value * 100:.1f}%"
+
+
 # ------------------------------- Data Loading ------------------------------- #
 
 # Load and cache the data
@@ -134,6 +144,13 @@ with st.spinner("Formatting the results..."):
     )
     formatted_df["Market Cap"] = formatted_df["Market Cap"].apply(format_large_number)
     formatted_df["Volume"] = formatted_df["Volume"].apply(format_large_number)
+
+    # Apply the styling function to the Percentage Change columns
+    formatted_df["% 24h"] = formatted_df["% 24h"].apply(color_negative_red_positive_green)
+    formatted_df["% 7d"] = formatted_df["% 7d"].apply(color_negative_red_positive_green)
+    formatted_df["% 30d"] = formatted_df["% 30d"].apply(color_negative_red_positive_green)
+    formatted_df["% Year"] = formatted_df["% Year"].apply(color_negative_red_positive_green)
+    formatted_df["% of ATH"] = formatted_df["% of ATH"].apply(format_percentage)
 
     # Display the formatted DataFrame
     # Initialize session state for pagination if not already set
