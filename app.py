@@ -18,6 +18,7 @@ st.header("Shitstar 💩")
 st.sidebar.header("Filter options")
 market_cap_min = st.sidebar.number_input("Min Market Cap")
 volume_min = st.sidebar.number_input("Min Volume")
+rsi_min = st.sidebar.number_input("Min RSI")  # Add RSI filter
 search_input = st.sidebar.text_input("Search by Name or Symbol")
 
 # Settings
@@ -48,9 +49,12 @@ def load_coin_data(url):
         return pd.read_csv(StringIO(response.text))
 
 
-def calculate_roc(df):
-    df["Rate of Change"] = df["Close"].pct_change(periods=30) * 100
-
+def calculate_rsi(df, period=14):
+    delta = df["Close"].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+    rs = gain / loss
+    df["RSI"] = 100 - (100 / (1 + rs))
     return df
 
 
@@ -96,11 +100,11 @@ with st.spinner("Downloading coin candle data..."):
     ohlcv_df = load_coin_data("https://s3.ca-central-1.amazonaws.com/cryptoai.dev/coin_daily_candles.csv")
 
 with st.spinner("Filtering through the coins..."):
-    ohlcv_df = ohlcv_df.groupby("CoinMarketCap ID", as_index=False).apply(calculate_roc).reset_index(drop=True)
+    ohlcv_df = ohlcv_df.groupby("CoinMarketCap ID", as_index=False).apply(calculate_rsi).reset_index(drop=True)
 
     # Merge the coins data with aggregated OHLCV data
     aggregated_df = coins_df.merge(
-        ohlcv_df.groupby("CoinMarketCap ID")["Rate of Change"].mean().reset_index(), on="CoinMarketCap ID"
+        ohlcv_df.groupby("CoinMarketCap ID")["RSI"].mean().reset_index(), on="CoinMarketCap ID"
     )
 
     # Ensure the 'Inception Date' column is timezone-naive before comparison
@@ -108,7 +112,9 @@ with st.spinner("Filtering through the coins..."):
 
     # Apply filters based on user input
     filtered_df = aggregated_df[
-        (aggregated_df["MarketCap"] >= market_cap_min) & (aggregated_df["Volume"] >= volume_min)
+        (aggregated_df["MarketCap"] >= market_cap_min)
+        & (aggregated_df["Volume"] >= volume_min)
+        & (aggregated_df["RSI"] >= rsi_min)
     ]
 
     # Filter by name or abbreviation if provided
@@ -160,6 +166,9 @@ with st.spinner("Formatting the results..."):
     formatted_df["% 30d"] = formatted_df["% 30d"].apply(color_negative_red_positive_green)
     formatted_df["% Year"] = formatted_df["% Year"].apply(color_negative_red_positive_green)
     formatted_df["% of ATH"] = formatted_df["% of ATH"].apply(format_percentage)
+
+    # Round RSI to a whole number
+    formatted_df["RSI"] = formatted_df["RSI"].apply(round)
 
     # Modify the DataFrame to include the CoinMarketCap link
     formatted_df["Coin"] = formatted_df.apply(create_coinmarketcap_link, axis=1)
