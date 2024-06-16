@@ -39,6 +39,7 @@ lint.extend-ignore = [
     "S308",    # Trust us with mark_safe
     "S311",    # Trust us with random
     "S324",    # Trust us with hashlib
+    "SIM102",  # Nested ifs are ok
     "SIM108",  # Don't force ternary operators
     "TRY003",  # long messages in exceptions are ok
 ]
