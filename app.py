@@ -13,6 +13,13 @@ import time
 
 # --------------------------- User Interface Setup --------------------------- #
 
+# Set the page configuration
+st.set_page_config(
+    page_title="Shitstar - Find the star in all the shitcoins",  # HTML title of the page
+    page_icon="💩",  # Favicon of the page
+    layout="wide",
+    initial_sidebar_state="expanded",  # Initial state of the sidebar
+)
 st.header("Shitstar 💩")
 # Form for filtering data
 st.sidebar.header("Filter options")
