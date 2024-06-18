@@ -101,10 +101,10 @@ def create_coinmarketcap_link(row):
 
 # Load and cache the data
 with st.spinner("Downloading coins data..."):
-    coins_df = load_coin_data("https://s3.ca-central-1.amazonaws.com/cryptoai.dev/coins.csv")
+    coins_df = load_coin_data("https://di5inb1d0ajmy.cloudfront.net/coins.csv")
 
 with st.spinner("Downloading coin candle data..."):
-    ohlcv_df = load_coin_data("https://s3.ca-central-1.amazonaws.com/cryptoai.dev/coin_daily_candles.csv")
+    ohlcv_df = load_coin_data("https://di5inb1d0ajmy.cloudfront.net/coin_daily_candles.csv")
 
 with st.spinner("Filtering through the coins..."):
     ohlcv_df = ohlcv_df.groupby("CoinMarketCap ID", as_index=False).apply(calculate_rsi).reset_index(drop=True)
