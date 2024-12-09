@@ -10,6 +10,6 @@ pre-commit
 ruff
 
 # Optional goodies that improve the developer experience
-# pytest-sugar
-# better_exceptions
+pytest-sugar
+better_exceptions
 # pdbpp # ipython in pdb
