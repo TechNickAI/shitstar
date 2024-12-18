@@ -88,7 +88,7 @@ six==1.16.0
     # via python-dateutil
 smmap==5.0.1
     # via gitdb
-streamlit==1.40.2
+streamlit==1.41.1
     # via -r requirements/requirements.in
 tenacity==8.3.0
     # via streamlit
@@ -104,3 +104,5 @@ tzdata==2024.1
     # via pandas
 urllib3==2.2.1
     # via requests
+watchdog==6.0.0
+    # via streamlit
